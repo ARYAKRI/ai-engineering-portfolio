@@ -5,3 +5,7 @@ faiss-cpu
 tiktoken
 fastapi
 uvicorn
+python-dotenv
+langchain-community
+langchain-openai
+langchain-text-splitters
