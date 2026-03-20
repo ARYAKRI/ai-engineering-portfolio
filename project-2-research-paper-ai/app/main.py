@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 
@@ -7,6 +8,16 @@ from pdf_loader import load_pdf
 from embeddings import create_vector_store
 from rag_pipeline import generate_answer
 app = FastAPI()
+
+# ADD THIS PART:
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # This tells the browser "It's okay to accept requests from React"
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # This will hold our vector database in memory
 vectorstore = None
