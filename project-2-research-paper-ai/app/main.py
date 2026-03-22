@@ -48,21 +48,35 @@ async def upload_paper(file: UploadFile = File(...)):
 @app.get("/ask")
 def ask_question(question: str):
     if vectorstore is None:
-        return {"error": "Please upload a paper first using /upload-paper"}
-
-    # 1. Search for the context
-    results = vectorstore.similarity_search(question)
+        return {"error": "Please upload a paper first!"}
     
-    # We take the full content of the most relevant chunk
-    context = results[0].page_content
+    # To this (The "Diversity" Filter):
+    results = vectorstore.similarity_search(question, k=10) # Get more chunks
+    unique_chunks = []
+    seen_text = set()
 
-    # 2. Generate the AI answer
-    answer = generate_answer(context, question)
+    for doc in results:
+        content = doc.page_content[:200] # Check the first 200 chars for duplicates
+        if content not in seen_text:
+            unique_chunks.append(doc)
+            seen_text.add(content)
+        if len(unique_chunks) == 3: # Stop once we have 3 DIFFERENT ones
+            break
 
-    # 3. Return full details for the Frontend
+    context = "\n\n".join([d.page_content for d in unique_chunks])
+
+    # 1. Get more results to account for footers
+        
+    # 2. Use a 'set' to remove duplicate text chunks
+    unique_contents = list(dict.fromkeys([doc.page_content for doc in results]))
+    
+    # 3. Take the first 3 truly unique chunks
+    final_context = "\n\n".join(unique_contents[:3])
+
+    answer = generate_answer(final_context, question)
+
     return {
         "question": question, 
         "answer": answer,
-        "source": context  # Changed from source_chunk to source for React consistency
-    }  
-    
+        "sources": [text[:150] + "..." for text in unique_contents[:3]]
+    }
