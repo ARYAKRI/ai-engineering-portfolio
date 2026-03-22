@@ -50,15 +50,19 @@ def ask_question(question: str):
     if vectorstore is None:
         return {"error": "Please upload a paper first using /upload-paper"}
 
-    # 3. Search for the context
+    # 1. Search for the context
     results = vectorstore.similarity_search(question)
+    
+    # We take the full content of the most relevant chunk
     context = results[0].page_content
 
-    # 4. Generate the AI answer
+    # 2. Generate the AI answer
     answer = generate_answer(context, question)
 
+    # 3. Return full details for the Frontend
     return {
         "question": question, 
         "answer": answer,
-        "source_chunk": context[:200] + "..." # Show a snippet of where the AI found it
-    } 
+        "source": context  # Changed from source_chunk to source for React consistency
+    }  
+    
